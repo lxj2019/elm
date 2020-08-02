@@ -8,14 +8,26 @@ const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin')
+
 const portfinder = require('portfinder')
+//模拟后台数据
+const express = require('express')
+const app = express()//请求server
+const appData = require('../data.json')//加载本地数据文件
+const seller = appData.seller//获取对应的本地数据
+const goods = appData.goods
+const ratings = appData.ratings
+const apiRoutes = express.Router()
+app.use('/api', apiRoutes)//通过路由请求数据
+
+
 
 const HOST = process.env.HOST
 const PORT = process.env.PORT && Number(process.env.PORT)
 
 const devWebpackConfig = merge(baseWebpackConfig, {
   module: {
-    rules: utils.styleLoaders({ sourceMap: config.dev.cssSourceMap, usePostCSS: true })
+    rules: utils.styleLoaders({sourceMap: config.dev.cssSourceMap, usePostCSS: true})
   },
   // cheap-module-eval-source-map is faster for development
   devtool: config.dev.devtool,
@@ -25,7 +37,7 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     clientLogLevel: 'warning',
     historyApiFallback: {
       rewrites: [
-        { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html') },
+        {from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, 'index.html')},
       ],
     },
     hot: true,
@@ -35,13 +47,33 @@ const devWebpackConfig = merge(baseWebpackConfig, {
     port: PORT || config.dev.port,
     open: config.dev.autoOpenBrowser,
     overlay: config.dev.errorOverlay
-      ? { warnings: false, errors: true }
+      ? {warnings: false, errors: true}
       : false,
     publicPath: config.dev.assetsPublicPath,
     proxy: config.dev.proxyTable,
     quiet: true, // necessary for FriendlyErrorsPlugin
     watchOptions: {
       poll: config.dev.poll,
+    },
+    before(app) { //配置请求路由和响应
+      app.get('/api/seller', (req, res) => {
+        res.json({
+          errno: 0, //当我们数据正常时，我们通过传递errno字符为0表示数据正常
+          data: seller
+        })//接口返回json数据，上面配置的数据seller就赋值给data请求后调用
+      }),
+        app.get('/api/goods', (req, res) => {
+          res.json({
+            errno: 0,
+            data: goods
+          })
+        }),
+        app.get('/api/ratings', (req, res) => {
+          res.json({
+            errno: 0,
+            data: ratings
+          })
+        })
     }
   },
   plugins: [

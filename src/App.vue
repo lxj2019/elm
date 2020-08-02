@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <v-header></v-header>
+    <v-header :seller="seller"></v-header>
     <div class="tab">
       <div class="tab-item">
         <router-link to='/goods'>商品</router-link>
@@ -23,7 +23,8 @@
 import {request} from "./network/request";
 import Header from "./components/header/Header";
 
-
+//设置获取数据成功的状态码OK
+const OK = 0;
 
 export default {
   name: 'App',
@@ -37,12 +38,20 @@ export default {
   },
   created() {
     request({
+      url:'seller',
+      method:'get'
+    }).then(res=>{
+      let data = res.data;
+      if(data.errno == OK ){
+        this.seller = data.data
+      }
+
     })
   }
 }
 </script>
 
-<style lang="stylus" ref="stylesheet/stylus">
+<style lang="stylus" ref="stylesheet/stylus" scoped>
   @import "common/stylus/mixin";
  #app
   .tab
