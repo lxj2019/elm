@@ -2,7 +2,7 @@
   <div class="goods">
     <div class="goods-sort" ref="goodsSort">
       <ul>
-        <li v-for="(item,index) in goods" class="sort-item" :class="{sortActive:currentIndex == index}"
+        <li v-for="(item,index) in goods" class="sort-item" :class="{sortActive:currentIndex === index}"
         @click="selectSort(index)">
           <span class="sort-name border-1px">
              <span class="icon" v-if="item.type>0" :class="classList[item.type]"></span>
@@ -30,33 +30,50 @@
                 <span class="now">￥{{food.price}}</span>
                 <span v-show="food.oldPrice" class="old">￥{{food.oldPrice}}</span>
               </div>
+              <div class="cart-control" >
+                <cart-control :food="food"></cart-control>
+              </div>
             </div>
           </li>
         </ul>
         </li>
       </ul>
     </div>
+<!--    引入购物车组件，需要传递的数据有：被选中的食品数组、商家的配送费、最低起送价格-->
+    <shop-cart :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"
+    :select-foods="selectfoods"></shop-cart>
   </div>
 </template>
 
 <script>
   import {request} from "../../network/request";
   import BScroll from 'better-scroll';
+  import ShopCart from "../shopcart/ShopCart";
+  import CartControl from "../cartcontrol/CartControl";
   const OK=0
 
   export default {
     name: "Goods",
+    components:{
+      ShopCart,CartControl
+    },
     data(){
       return{
         classList:['decrease', 'discount', 'special', 'invoice', 'guarantee'],
         goods:[],
         scrollY:0,     //实事滚动的位置
-        listHeight:[]
+        listHeight:[]       //存放各个类别商品的高度
+      }
+    },
+    props:{
+      seller:{
+        type:Object,
+        default:{}
       }
     },
     methods:{
       selectSort(index){
-        if(!event.constructor){     //只接受betterscroll派发的click
+        if(!Event.constructor){     //只接受betterscroll派发的click
           return;
         }
         let goodsList = this.$refs.goodsWrapper.getElementsByClassName('goods-list-hook');  //获取商品列表的DOM对象集合
@@ -68,7 +85,8 @@
           click:true            //点击后派发click事件
         })       //为分类列表添加滚动条
         this.goodsWrapper = new BScroll(this.$refs.goodsWrapper,{         //为商品列表添加滚动条
-          probeType:3       //滚动时，探测滚动位置
+          probeType:3,
+          click:true //滚动时，探测滚动位置
         })
         this.goodsWrapper.on('scroll',(pos)=>{          //滚动时触发，获取滚动y方向位置
           this.scrollY = Math.abs(Math.round(pos.y))
@@ -86,30 +104,34 @@
     },
     computed:{
       currentIndex(){
-        for(let i = 0;i < this.listHeight.length; i++){
+        for(let i = 0;i < this.listHeight.length; i++){           //遍历各个区间的高度，看当前位置高度属于哪个类别
           let height1 = this.listHeight[i];
           let height2 = this.listHeight[i+1];
           if( !height2 || (height1<=this.scrollY && height2>this.scrollY)){      //当当前位置超过最大位置，或在某个区间，则返回索引值
-            console.log(i);
             return i;
           }
         }
         return 0;
+      },
+      selectfoods(){
+        let foodsList = [];                 //用于存放被选中的食品
+        this.goods.forEach((good)=>{          //遍历所有种类中的所有食品，
+          good.foods.forEach((food)=>{
+            if(food.count){                     //如果有数量，则加入到数组中
+              foodsList.push(food)
+            }
+          })
+        })
+        return foodsList
       }
     },
-    // props:{
-    //   seller:{
-    //     type:Object,
-    //     default:{}
-    //   }
-    // },
     mounted() {
       request({
         url: 'goods',
         method: 'get'
       }).then(res => {
         let data = res.data;
-        if (data.errno == OK) {
+        if (data.errno === OK) {
           this.goods = data.data
           this.$nextTick(()=>{
             this._initScroll()
@@ -232,6 +254,11 @@
               text-decoration:line-through
               color:rgb(147,153,159)
             }
+          }
+          .cart-control{
+            position: absolute
+            right:0
+            bottom:6px
           }
         }
       }
