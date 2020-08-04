@@ -1,10 +1,15 @@
 <template>
-  <div class="cart-control">
-    <transition  name="scroll"><div class="cart-decrease" v-show="food.count>0"
-    @click="decreaseCount()"></div></transition>
-    <div class="cart-count" v-show="food.count>0">{{food.count}}</div>
-    <div class="cart-increase" @click="increaseCount()"></div>
+  <div class="box">
+    <div class="cart-control">
+      <transition  name="scroll">
+        <div class="cart-decrease" v-show="food.count>0"
+             @click="decreaseCount()"></div></transition>
+      <div class="cart-count" v-show="food.count>0">{{food.count}}</div>
+      <div class="cart-increase" @click="increaseCount()"></div>
+    </div>
+
   </div>
+
 </template>
 
 <script>
@@ -41,7 +46,7 @@
 
 <style lang="stylus" ref="stylesheet/stylus"  scoped>
   .cart-control{
-      display:flex
+    font-size:0
     .cart-decrease,
     .cart-increase{
       display:inline-block
@@ -61,13 +66,16 @@
     }
     .cart-count{
       display:inline-block
+      vertical-align: top
       width:24px
       padding:6px
       text-align: center
-      vertical-align: center
       line-height: 24px
-      font-size:12px
+      font-size:10px
       color:rgb(147,153,159)
     }
+    .cart-increase{
+      display:inline-block
+      }
   }
 </style>

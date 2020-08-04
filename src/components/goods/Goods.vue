@@ -258,7 +258,7 @@
           .cart-control{
             position: absolute
             right:0
-            bottom:6px
+            bottom:12px
           }
         }
       }

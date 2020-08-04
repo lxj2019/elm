@@ -1,45 +1,57 @@
 <template>
-  <div class="shopcart">
-    <div class="content">
-    <div class="content-left">
-      <div class="logo-wrapper">
-        <div class="logo-box" :class="{light:totalCount>0}">
-          <span class="logo"></span>
-          <div v-show="totalCount" class="num">{{totalCount}}</div>
+<!--  购物车组件：包括底部购物车、点击折叠购物车列表、背景-->
+  <div>
+    <div class="shopcart">
+      <div class="content" @click="toggleList()">
+        <div class="content-left">
+          <div class="logo-wrapper">
+            <div class="logo-box" :class="{light:totalCount>0}">
+              <span class="logo"></span>
+              <div v-show="totalCount" class="num">{{totalCount}}</div>
+            </div>
+          </div>
+          <div class="price">￥{{totalPrice}}</div>
+          <div class="extra">另需配收费{{deliveryPrice}}元</div>
         </div>
-      </div>
-      <div class="price">￥{{totalPrice}}</div>
-      <div class="extra">另需配收费{{deliveryPrice}}元</div>
-    </div>
-      <div class="content-right">
-          <div class="pay" :class="{enough:isEnough}">
+        <div class="content-right">
+<!--          当大于起送价格时，可以结算，用stop修饰符阻止事件冒泡，使得发生折叠-->
+          <div class="pay" :class="{enough:isEnough}" @click.stop="pay()">
             {{payDesc}}
           </div>
-      </div>
-      <div class="shopcart-list" v-show="false">
-        <div class="list-head">
-          <h1 class="title">购物车</h1>
-          <span class="clearCart">清空</span>
-        </div>
-        <div class="list-content">
-          <ul>
-            <li v-for="food in selectFoods" class="foodItem">
-              <span class='food-name'>{{food.name}}</span>
-              <span class="food-price">￥{{food.count*food.price}}</span>
-              <div class="cart-control">
-                <cart-control :food="food"></cart-control>
-              </div>
-            </li>
-          </ul>
         </div>
       </div>
-    </div>
+      <!--      购物车列表模块 start -->
+      <transition name="drop">
+        <div class="shopcart-list" v-show="listShow">
+          <div class="list-head">
+            <h1 class="title">购物车</h1>
+            <span class="clearCart" @click="clearCart()">清空</span>
+          </div>
+          <div class="list-content" ref="listContent">
+            <ul>
+              <li v-for="food in selectFoods" class="foodItem">
+                <span class='food-name'>{{food.name}}</span>
+                <span class="food-price">￥{{food.count*food.price}}</span>
+                <div class="cart-control">
+                  <cart-control :food="food"></cart-control>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </transition>
 
+    </div>
+    <transition name="fade">
+      <div class="shopcart-blur" v-show="listShow"
+      @click="hideCartList()"></div>
+    </transition>
   </div>
 </template>
 
 <script>
   import CartControl from "../cartcontrol/CartControl";
+  import BScroll from "better-scroll"
   export default {
     name: "ShopCart",
     components:{
@@ -58,7 +70,7 @@
         type:Number,
         default:0
       },
-      minPrice:{
+      minPrice: {
         type:Number,
         default:5
       }
@@ -66,28 +78,50 @@
     data() {
       return{
         isEnough :false,         //判断是否足够起送
-        // balls: [
-        //   {show:false},{show:false},{show:false},{show:false},{show:false}
-        // ]
+        fold:true                 //购物车列表是否折叠
       }
+    },
+    methods:{
+      toggleList(){                   //如果购物车没有商品，则返回
+        if(!this.totalCount) {         //有则切换折叠状态
+          return;
+        }
+        this.fold = !this.fold;
+      },
+      hideCartList(){                 //隐藏购物车列表，进入折叠状态
+        this.fold = true
+      },
+      clearCart(){
+        this.selectFoods.forEach((food)=>{
+          food.count=0;
+        })
+      },
+      pay(){
+        if(this.totalPrice<this.minPrice) {
+          return
+        }
+          window.alert(`支付${this.totalPrice}元`)
+      }
+
+
     },
     computed:{
     totalPrice() {           //计算商品的总价格
       let total=0;
-      this.selectFoods.forEach((food)=>{
+      this.selectFoods.forEach((food)=> {
         total+=food.price * food.count
       });
       return total;
     },
     totalCount() {         //计算商品数量的总和
       let total = 0;
-      this.selectFoods.forEach((food)=>{
+      this.selectFoods.forEach((food)=> {
         total+=food.count
       });
       return total;
     },
       payDesc() {                    //计算是总价否大于起送价格
-        if(this.totalPrice<this.minPrice){              //小于则显示还差多少
+        if(this.totalPrice<this.minPrice) {              //小于则显示还差多少
           this.isEnough =false                          //起送标记为false
           let price = this.minPrice-this.totalPrice
           return `还差￥${price}元起送`
@@ -95,6 +129,25 @@
           this.isEnough = true
           return "去结算"                  //大于则显示去结算
         }
+      },
+      listShow() {                           //控制购物车列表是否展示
+        if (!this.totalCount) {               //如果未选择商品，不展示
+          this.fold = true
+          return false
+        }
+        let show = !this.fold               //已选中商品，根据是否折叠来展示
+        if (show) {
+          this.$nextTick(()=>{                  //为购物车增加滚动条
+            if (!this.cartScroll) {                //先判断对象是否存在，不存在则new一个
+              this.cartScroll = new BScroll(this.$refs.listContent,{
+                click:true
+              });
+            }else {
+              this.cartScroll.refresh();          //存在则调用refresh接口，不用重新创建
+            }
+          })
+        }
+        return show;
       }
     }
   }
@@ -107,12 +160,13 @@
     position: fixed
     bottom:0
     left:0
+    z-index:50
     width:100%
     height:48px
-    z-index:50
     background: #141d27
     .content{
       display: flex
+      position:relative
       height:100%
       color:rgba(255,255,255,.4)
       .content-left{
@@ -192,12 +246,91 @@
           }
         }
       }
-      .shopcart-list{
+  }
+    .shopcart-list{
+      position:absolute
+      left:0
+      top:0
+      z-index:-1
+      transform:translate3d(0,-100%,0)
+      //transform:translateY(-100%)
+      width:100%
+      &.drop-enter-active,&.drop-leave-active{
 
+        transition: all .4s linear;
       }
+      &.drop-enter,&.drop-leave-to{
+        opacity: 0
+        transform:translate3d(0,0,0)
+      }
+      .list-head{
+        height:40px
+        padding:0 18px
+        line-height: 40px
+        background-color: #f3f5f7
+        border-bottom: 1px solid rgba(7,17,27, .1);
+        .title{
+          float:left
+          font-size:14px
+          color:rgb(7,17,27)
+          font-weight:200
+        }
+        .clearCart{
+          float:right
+          font-size:12px
+          color:rgb(0,160,220)
+        }
+      }
+      .list-content{
+        position:relative
+        max-height: 217px;
+        padding:0 18px
+        overflow:hidden
+        background-color: #fff
+        .foodItem{
+          position:relative
+          width:100%
+          height:48px
+          padding:12px
+          border-1px(rgba(7,17,27, .1))
+          .food-name{
+            font-size:14px
+            line-height: 24px
+            color:rgb(7,17,27)
+          }
+          .food-price{
+            position: absolute
+            right:95px
+            bottom:12px
+            font-size:14px
+            line-height:24px
+            color:rgb(240,20,20)
+            font-weight:700
+          }
+          .cart-control{
+            position:absolute
+            right:0px
+            bottom:6px
+          }
+        }
+      }
+    }
   }
 
+  .shopcart-blur{
+    position:fixed
+    top:0
+    left:0
+    width:100%
+    height:100%
+    z-index:1               //此处z-index要小于shopcart组件的z-index,否则会遮挡住购物车列表
+    background-color:rgba(7,17,27,.6)
+    backdrop-filter:blur(5px)
+    &.fade-enter-active,&.fade-leave-active{
+      transition:all .4s linear
+    }
+    &.fade-enter,&.fade-leave-to{
+      opacity:0
+    }
   }
-
-
 </style>
