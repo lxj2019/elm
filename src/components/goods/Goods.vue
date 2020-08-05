@@ -1,48 +1,53 @@
 <template>
-  <div class="goods">
-    <div class="goods-sort" ref="goodsSort">
-      <ul>
-        <li v-for="(item,index) in goods" class="sort-item" :class="{sortActive:currentIndex === index}"
-        @click="selectSort(index)">
+  <div>
+    <div class="goods">
+      <div class="goods-sort" ref="goodsSort">
+        <ul>
+          <li v-for="(item,index) in goods" class="sort-item" :class="{sortActive:currentIndex === index}"
+              @click="selectSort(index)">
           <span class="sort-name border-1px">
              <span class="icon" v-if="item.type>0" :class="classList[item.type]"></span>
             {{item.name}}</span>
-        </li>
-      </ul>
-    </div>
-    <div class="goods-wrapper" ref="goodsWrapper">
-      <ul>
-        <li v-for="item in goods" class="goods-list goods-list-hook">
-          <h1 class="title">{{item.name}}</h1>
-        <ul>
-          <li v-for="food in item.foods" class="food-item border-1px">
-            <div class="food-img">
-              <img :src="food.image" alt="" width="60px" height="60px">
-            </div>
-            <div class="content">
-              <h2 class="food-name">{{food.name}}</h2>
-              <p  v-show="food.description" class="food-desc">{{food.description}}</p>
-              <div class="food-data">
-                <span class="count">月售{{food.sellCount}}份</span>
-                <span>好评率{{food.rating}}%</span>
-              </div>
-              <div class="food-price">
-                <span class="now">￥{{food.price}}</span>
-                <span v-show="food.oldPrice" class="old">￥{{food.oldPrice}}</span>
-              </div>
-              <div class="cart-control" >
-                <cart-control :food="food"></cart-control>
-              </div>
-            </div>
           </li>
         </ul>
-        </li>
-      </ul>
+      </div>
+      <div class="goods-wrapper" ref="goodsWrapper">
+        <ul>
+          <li v-for="item in goods" class="goods-list goods-list-hook">
+            <h1 class="title">{{item.name}}</h1>
+            <ul>
+              <li v-for="food in item.foods" class="food-item border-1px"
+                  @click="selectFood(food)">
+                <div class="food-img">
+                  <img :src="food.image" alt="" width="60px" height="60px">
+                </div>
+                <div class="content">
+                  <h2 class="food-name">{{food.name}}</h2>
+                  <p  v-show="food.description" class="food-desc">{{food.description}}</p>
+                  <div class="food-data">
+                    <span class="count">月售{{food.sellCount}}份</span>
+                    <span>好评率{{food.rating}}%</span>
+                  </div>
+                  <div class="food-price">
+                    <span class="now">￥{{food.price}}</span>
+                    <span v-show="food.oldPrice" class="old">￥{{food.oldPrice}}</span>
+                  </div>
+                  <div class="cart-control" >
+                    <cart-control :food="food"></cart-control>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <!--    引入购物车组件，需要传递的数据有：被选中的食品数组、商家的配送费、最低起送价格-->
+      <shop-cart :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"
+                 :select-foods="selectfoods"></shop-cart>
     </div>
-<!--    引入购物车组件，需要传递的数据有：被选中的食品数组、商家的配送费、最低起送价格-->
-    <shop-cart :delivery-price="seller.deliveryPrice" :min-price="seller.minPrice"
-    :select-foods="selectfoods"></shop-cart>
+    <food-detail ref="foodDetail" :food="selectedFood"></food-detail>
   </div>
+
 </template>
 
 <script>
@@ -50,19 +55,21 @@
   import BScroll from 'better-scroll';
   import ShopCart from "../shopcart/ShopCart";
   import CartControl from "../cartcontrol/CartControl";
+  import FoodDetail from "../food/FoodDetail";
   const OK=0
 
   export default {
     name: "Goods",
     components:{
-      ShopCart,CartControl
+      ShopCart,CartControl,FoodDetail
     },
     data(){
       return{
         classList:['decrease', 'discount', 'special', 'invoice', 'guarantee'],
         goods:[],
         scrollY:0,     //实事滚动的位置
-        listHeight:[]       //存放各个类别商品的高度
+        listHeight:[],       //存放各个类别商品的高度
+        selectedFood:{}
       }
     },
     props:{
@@ -71,16 +78,23 @@
         default:{}
       }
     },
-    methods:{
-      selectSort(index){
-        if(!Event.constructor){     //只接受betterscroll派发的click
+    methods: {
+      selectSort(index) {
+        if(!Event.constructor) {     //只接受betterscroll派发的click
           return;
         }
         let goodsList = this.$refs.goodsWrapper.getElementsByClassName('goods-list-hook');  //获取商品列表的DOM对象集合
         let goods = goodsList[index];
         this.goodsWrapper.scrollToElement(goods,300)    //调用方法，滚到到指定的DOM对象
       },
-      _initScroll(){
+      selectFood(food){               //实现点击食品，展示食品详情页
+        if(!Event.constructor) {
+          return;
+        }
+        this.selectedFood = food;         //把选中的食品的对象food赋给selectedFood，从而传给“FoodDetail”子组件
+        this.$refs.foodDetail.show()        //调用FoodDetail子组件的show()方法，使得子组件能展示
+      },
+      _initScroll() {
         this.goodsSort = new BScroll(this.$refs.goodsSort,{
           click:true            //点击后派发click事件
         })       //为分类列表添加滚动条
@@ -92,19 +106,19 @@
           this.scrollY = Math.abs(Math.round(pos.y))
         });
       },
-      caculateHeight(){         //计算每个类别的高度
+      caculateHeight() {         //计算每个类别的高度
         let goodsList = this.$refs.goodsWrapper.getElementsByClassName('goods-list-hook');
         let height = 0;
         this.listHeight.push(height);
-        for(let i = 0;i<goodsList.length;i++){
+        for (let i = 0;i<goodsList.length;i++){
           height += goodsList[i].clientHeight;
           this.listHeight.push(height);
         }
       }
     },
-    computed:{
-      currentIndex(){
-        for(let i = 0;i < this.listHeight.length; i++){           //遍历各个区间的高度，看当前位置高度属于哪个类别
+    computed: {
+      currentIndex() {
+        for (let i = 0;i < this.listHeight.length; i++){           //遍历各个区间的高度，看当前位置高度属于哪个类别
           let height1 = this.listHeight[i];
           let height2 = this.listHeight[i+1];
           if( !height2 || (height1<=this.scrollY && height2>this.scrollY)){      //当当前位置超过最大位置，或在某个区间，则返回索引值
@@ -113,7 +127,7 @@
         }
         return 0;
       },
-      selectfoods(){
+      selectfoods() {
         let foodsList = [];                 //用于存放被选中的食品
         this.goods.forEach((good)=>{          //遍历所有种类中的所有食品，
           good.foods.forEach((food)=>{

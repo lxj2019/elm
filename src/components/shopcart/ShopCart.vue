@@ -256,7 +256,6 @@
       //transform:translateY(-100%)
       width:100%
       &.drop-enter-active,&.drop-leave-active{
-
         transition: all .4s linear;
       }
       &.drop-enter,&.drop-leave-to{

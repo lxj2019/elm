@@ -3,9 +3,9 @@
     <div class="cart-control">
       <transition  name="scroll">
         <div class="cart-decrease" v-show="food.count>0"
-             @click="decreaseCount()"></div></transition>
+             @click.stop="decreaseCount()"></div></transition>
       <div class="cart-count" v-show="food.count>0">{{food.count}}</div>
-      <div class="cart-increase" @click="increaseCount()"></div>
+      <div class="cart-increase" @click.stop="increaseCount()"></div>
     </div>
 
   </div>
@@ -67,7 +67,7 @@
     .cart-count{
       display:inline-block
       vertical-align: top
-      width:24px
+      width:20px
       padding:6px
       text-align: center
       line-height: 24px
