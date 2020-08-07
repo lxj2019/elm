@@ -95,9 +95,9 @@
         this.$refs.foodDetail.show()        //调用FoodDetail子组件的show()方法，使得子组件能展示
       },
       _initScroll() {
-        this.goodsSort = new BScroll(this.$refs.goodsSort,{
+        this.goodsSort = new BScroll(this.$refs.goodsSort,{        //为分类列表添加滚动条
           click:true            //点击后派发click事件
-        })       //为分类列表添加滚动条
+        })
         this.goodsWrapper = new BScroll(this.$refs.goodsWrapper,{         //为商品列表添加滚动条
           probeType:3,
           click:true //滚动时，探测滚动位置

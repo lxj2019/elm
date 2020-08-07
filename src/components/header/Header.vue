@@ -41,7 +41,7 @@
         <div class="detail-content">
           <div class="detail-main">
             <h1 class="seller-name">{{seller.name}}</h1>
-            <star :size="48" :score="seller.score" class="star"></star>
+            <Star :size="48" :score="seller.score" class="star"></Star>
             <!--          复用详情页标题组件-->
             <v-title title="商家优惠"></v-title>
 
@@ -64,12 +64,12 @@
 </template>
 
 <script>
-  import star from "../star/star.vue"
+  import Star from "../star/Star.vue"
   import Title from "../common/Title";
   export default {
     name: "Header",
     components:{
-      star,
+      Star,
       "v-title":Title
     },
     props:{

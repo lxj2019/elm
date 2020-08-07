@@ -58,7 +58,7 @@
        width:10px
        height:10px
        margin-right:3px
-       background-size:15px 15px
+       background-size:10px 10px
        &:last-child{
          margin-right: 0
        }

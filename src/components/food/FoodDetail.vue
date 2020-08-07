@@ -44,7 +44,7 @@
                 <li class="ratings-item border-1px" v-for="rating in food.ratings"
                 v-show="showFoodItem(rating.rateType,rating.text)">
                   <div class="time">
-                    {{rating.rateTime | formateDate}}
+                    {{rating.rateTime | formatDate}}
                   </div>
                   <div class="user">
                     <span class="username">{{rating.username}}</span>
@@ -81,7 +81,7 @@
       CartControl,Split,RatingSelect
     },
     filters:{
-      formateDate(time){
+      formatDate(time){
         let date = new Date(time)
         return  formatDate(date,'yyyy-MM-dd hh:mm');
       }

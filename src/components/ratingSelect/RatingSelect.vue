@@ -65,7 +65,7 @@
         if(!Event.constructor){
           return
         }
-       // this.selectType = type        //这里不用自己修改selectType,向父组件传递事件并修改，然后通过父传子来修改props
+        //this.selectType = type        //这里不用自己修改selectType,向父组件传递事件并修改，然后通过父传子来修改props
         this.$emit('updateType',type)    //向父组件传递事件与参数
       },
       toggle(){

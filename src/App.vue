@@ -36,7 +36,12 @@ export default {
   },
   data(){
     return{
-      seller:{}
+      seller:{},
+      default(){
+        return{}
+      },
+      onlyContent:false,
+
     }
   },
   created() {
