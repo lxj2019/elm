@@ -31,7 +31,8 @@
       </div>
       <div  v-show="ratings && ratings.length" class="ratings-list">
         <ul>
-          <li v-for="rating in ratings" class="rating-item">
+          <li v-show="showRatingItem(rating.rateType,rating.text)"
+              v-for="rating in ratings" class="rating-item">
               <div class="avatar">
                 <img :src="rating.avatar" alt="用户头像" width="28px"height="28px">
               </div>
@@ -43,7 +44,7 @@
                 </div>
                 <p class="text">{{rating.text}}</p>
                 <div v-show="rating.recommend && rating.recommend.length" class="recommend">
-                    <span class="icon-thumbs-up"></span>
+                  <span :class="{'icon-thumbs-up':!rating.Typerate,'icon-thumbs-down':rating.rateType}"></span>
                   <span class="item" v-for="item in rating.recommend">{{item}}</span>
                 </div>
                 <div class="time"> {{rating.rateTime | formatDate}}</div>
@@ -113,8 +114,18 @@
       },
       updateOnlyContent(flag){
         this.onlyContent = flag
+      },
+      showRatingItem(type,text){
+        if(this.onlyContent && !text){      //如果选中只有内容的评论，则没有内容的评论不展示
+          return false;
+        }
+        if(this.selectType === ALL){        //2.如果选中全部，则显示,否则继续判断
+          return true ;
+        }
+        return this.selectType === type       //评论类型和选中的类型符合才返回true
       }
-    }
+    },
+
   }
 </script>
 
@@ -217,7 +228,6 @@
           .avatar{
             flex:0 0 28px
             width:28px
-            height:100px
             .img{
               border-radius:50%
             }
@@ -252,7 +262,7 @@
             }
             .recommend{
               line-height:16px
-              .icon-thumbs-up,.item{
+              .icon-thumbs-up,.icon-thumbs-down,.item{
                 display:inline-block
                 margin:0 8px 4px 0
                 font-size:0
@@ -260,6 +270,10 @@
               .icon-thumbs-up{
                 font-size:12px
                 color: rgb(0,160,220)
+              }
+              .icon-thumbs-down{
+                font-size:12px
+                color: rgb(183,187,191)
               }
               .item{
                 padding:0 6px
