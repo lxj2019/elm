@@ -1,6 +1,7 @@
 <template>
   <div class="seller" ref="seller">
     <div class="seller-content">
+<!--      商家评分-->
       <div class="seller-evaluate">
         <h1 class="name">{{ seller.name }}</h1>
         <div class="desc border-1px">
@@ -28,8 +29,13 @@
             </div>
           </li>
         </ul>
+        <div class="collection" @click="toggleCollect">
+          <span class="icon-favorite" :class="{active:hasCollection}"></span>
+          <span class="text" >{{collectionText}}</span>
+        </div>
        </div>
       <Split></Split>
+<!--      商家公告-->
       <div class="seller-bulletin">
           <h1 class="title">商家公告与活动</h1>
           <p class="text">{{seller.bulletin}}</p>
@@ -41,10 +47,20 @@
         </ul>
         </div>
       <Split></Split>
+<!--      商家实景-->
       <div class="seller-scene">
         <h1 class="title">商家实景</h1>
+        <div class="pic-wrapper" ref="picWrapper">
+          <ul class="pic-list" ref="picList">
+            <li v-for="pic in seller.pics" class="pic">
+              <img :src="pic" alt="商家图片" width="120px" height="90px">
+            </li>
+          </ul>
+        </div>
       </div>
+
       <Split></Split>
+<!--      商家信息-->
       <div class="seller-infos">
         <h1 class="title">商家信息</h1>
         <ul class="infos-list">
@@ -74,12 +90,11 @@
     },
     data() {
       return {
-        showType:[]
+        showType: ['decrease', 'discount', 'special', 'invoice', 'guarantee'],
+        hasCollection:false
       }
     },
-    created() {
-      this.showType = ['decrease', 'discount', 'special', 'invoice', 'guarantee'];
-    },
+
     mounted() {
       // 页面整体滚动
       this.scroll = new BScroll(this.$refs.seller, {
@@ -87,12 +102,28 @@
       });
 
       // 商家图片横向滚动
-
+      if(this.seller.pics){
+        let picWidth = 120;                //每张图片宽度
+        let margin = 6;                    //图片之间的距离
+        let width = (picWidth + margin) * this.seller.pics.length-margin;      //计算整个picList的宽度
+        this.$refs.picList.style.width = width + 'px';
+        this.$nextTick(()=>{
+          this.picScroll = new BScroll(this.$refs.picWrapper,{
+            scrollX:true,                          //定义横向滚动
+            eventPassthrough:'vetical'            //滚动时忽略垂直方向的滚动
+          })
+        })
+      }
     },
     computed: {
+      collectionText(){
+        return this.hasCollection ? '已收藏':"收藏"
+      }
     },
     methods: {
-
+      toggleCollect(){
+        this.hasCollection = !this.hasCollection
+      }
     }
   }
 </script>
@@ -158,6 +189,28 @@
           }
         }
       }
+      .collection{
+        position:absolute
+        width:50px
+        top:18px
+        right:11px
+        text-align:center
+        .icon-favorite{
+          display: block
+          margin-bottom:4px
+          line-height:24px
+          font-size:24px
+          color:#d4d6d9
+          &.active{
+            color:rgb(240,20,20)
+          }
+        }
+        .text{
+          font-size:10px
+          line-height:10px
+          color:rgb(77,85,93)
+        }
+      }
     }
     .seller-bulletin{
       padding:0 18px
@@ -219,6 +272,23 @@
         line-height: 14px
         color: rgb(7, 17, 27)
         font-size: 14px
+      }
+      .pic-wrapper{
+        width:100%
+        overflow: hidden
+        white-space: nowrap
+        .pic-list{
+          font-size:0
+          .pic{
+            display:inline-block
+            width:120px
+            height:90px
+            margin-right:6px
+            &.last-child{
+              margin-right:0
+            }
+          }
+        }
       }
     }
     .seller-infos{
